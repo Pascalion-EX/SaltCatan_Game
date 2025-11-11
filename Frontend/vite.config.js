@@ -8,7 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5500",
+        target: "https://salt-catan-game.vercel.app/",
+              changeOrigin: true,
       },
     },
   },
