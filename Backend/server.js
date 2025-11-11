@@ -32,6 +32,10 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
+app.get("/", (req, res) => {
+  res.send("✅ Backend is running successfully!");
+});
+
 
 // ✅ Export app for Vercel
 export default app;
