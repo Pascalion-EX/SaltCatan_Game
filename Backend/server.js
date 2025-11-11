@@ -2,11 +2,16 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRoutes from "./routes/auth.js";
+import cors from "cors";
 import { connectDB } from "./config/db.js";
 
 dotenv.config();
 
 const app = express();
+const allowedOrigins = [
+  "https://salt-catan-game-43wk98lwp-kerolosafam-gmailcoms-projects.vercel.app",
+  "http://localhost:5173"
+];
 
 // 🧩 Connect MongoDB
 mongoose
