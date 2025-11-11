@@ -38,23 +38,29 @@ const Home = ({ user, error }) => {
     init();
   }, [user]);
 
-  const fetchUsers = async () => {
-    try {
-      const endpoint =
-        user?.role === "admin"
-          ? "/api/users/admin/users"
-          : "/api/users/all";
-      const res = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    }
-  };
+const fetchUsers = async () => {
+  try {
+    const API_BASE = import.meta.env.VITE_API_URL;
+    const endpoint =
+      user?.role === "admin"
+        ? `${API_BASE}/api/users/admin/users`
+        : `${API_BASE}/api/users/all`;
+
+    const res = await axios.get(endpoint, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    setUsers(res.data);
+  } catch (err) {
+    console.error("Failed to fetch users:", err.response?.data || err.message);
+  }
+};
+
   const refreshUser = async () => {
   try {
-    const res = await axios.get("/api/users/profile", {
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     setInventory(res.data.inventory || {});
@@ -73,7 +79,7 @@ const Home = ({ user, error }) => {
   const updateInventory = async (id, card, amount) => {
     try {
       await axios.put(
-        `/api/users/admin/inventory/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/users/admin/inventory/${id}`,
         { card, amount },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -87,7 +93,7 @@ const Home = ({ user, error }) => {
   const updateResources = async (id, resource, amount) => {
     try {
       await axios.put(
-        `/api/users/admin/resources/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/users/admin/resources/${id}`,
         { resource, amount },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -100,7 +106,7 @@ const Home = ({ user, error }) => {
   const updateBuildings = async (id, type, amount) => {
     try {
       await axios.put(
-        `/api/users/admin/buildings/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/users/admin/buildings/${id}`,
         { type, amount },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -113,7 +119,7 @@ const Home = ({ user, error }) => {
 const updateTokens = async (id, amount) => {
   try {
     const res = await axios.put(
-      `/api/users/admin/tokens/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/users/admin/tokens/${id}`,
       { amount },
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
@@ -142,14 +148,14 @@ const handleMysteryCard = async () => {
 
     // 🎴 Add a random card (user-safe route)
     await axios.put(
-      `/api/users/inventory/${user._id}`,
+      `${import.meta.env.VITE_API_URL}/api/users/inventory/${user._id}`,
       { card: randomCard, amount: (inventory[randomCard] || 0) + 1 },
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
 
     // 🪙 Deduct one token (user-safe route)
     await axios.put(
-      `/api/users/tokens/${user._id}`,
+      `${import.meta.env.VITE_API_URL}/api/users/tokens/${user._id}`,
       { amount: -1 },
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
@@ -176,7 +182,7 @@ const handleMysteryCard = async () => {
   const handleEditSave = async (id) => {
     try {
       await axios.put(
-        `/api/users/admin/edit/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/users/admin/edit/${id}`,
         editData,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
