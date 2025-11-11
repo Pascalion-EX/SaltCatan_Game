@@ -13,6 +13,7 @@ const app = express();
 app.use(
   cors({
     origin: [
+       "https://salt-catan-game-mrom-exsayqco5-kerolosafam-gmailcoms-projects.vercel.app",
       "https://salt-catan-game-mrom.vercel.app/", // your frontend on Vercel
       "http://localhost:5173" // local dev
     ],
