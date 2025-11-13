@@ -315,5 +315,24 @@ router.get("/all", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+router.put("/admin/tokens/:id", protect, adminOnly, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.Token = Math.max(0, (user.Token || 0) + amount);
+    await user.save();
+
+    res
+      .status(200)
+      .json({ message: "Tokens updated by admin", tokens: user.Token });
+  } catch (err) {
+    console.error("ADMIN TOKEN ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 export default router;
