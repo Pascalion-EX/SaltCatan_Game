@@ -303,5 +303,17 @@ router.put("/admin/edit/:id", protect, adminOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+router.get("/all", protect, async (req, res) => {
+  try {
+    const users = await User.find(
+      { role: { $ne: "admin" }},
+      "username email house village roads score"
+    );
+    res.status(200).json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 export default router;
