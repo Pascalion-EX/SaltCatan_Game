@@ -13,26 +13,46 @@ import axios from "axios";
 import NotFound from "./components/NotFound";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  console.log(user);
+
+  // 🛡️ Automatically attach Authorization header
+  axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+
+  // 🔁 Restore session on refresh
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const res = await axios.get("/api/users/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(res.data);
-        } catch (err) {
-          setError("Failed to fetch user data");
-          localStorage.removeItem("token");
-        }
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/users/me`
+        );
+
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+      } catch (err) {
+        console.error("Session restore failed:", err);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
       }
+
       setIsLoading(false);
     };
+
     fetchUser();
   }, []);
 
@@ -48,14 +68,18 @@ function App() {
     <Router>
       <Navbar user={user} setUser={setUser} />
       <Routes>
-        <Route path="/" element={<Home user={user} error={error} />} />
+        <Route path="/" element={<Home user={user} setUser={setUser} />} />
         <Route
           path="/login"
-          element={user ? <Navigate to="/" /> : <Login setUser={setUser} />}
+          element={
+            user ? <Navigate to="/" /> : <Login setUser={setUser} />
+          }
         />
         <Route
           path="/register"
-          element={user ? <Navigate to="/" /> : <Register setUser={setUser} />}
+          element={
+            user ? <Navigate to="/" /> : <Register setUser={setUser} />
+          }
         />
         <Route path="*" element={<NotFound />} />
       </Routes>

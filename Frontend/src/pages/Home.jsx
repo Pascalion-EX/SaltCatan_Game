@@ -20,71 +20,70 @@ const resourceImages = {
   Sheep: "/resources/lamb.png",
 };
 
-const Home = ({ user, error }) => {
+const Home = ({ user, setUser, error }) => {
   const [users, setUsers] = useState([]);
   const [inventory, setInventory] = useState(user?.inventory || {});
   const [editingUser, setEditingUser] = useState(null);
   const [editData, setEditData] = useState({ username: "", email: "" });
   const [activeTab, setActiveTab] = useState("profile");
 
+  const API_BASE = import.meta.env.VITE_API_URL;
+
+  /* ============================================================
+      🔁 Sync local user with backend (profile refresh)
+  ============================================================ */
+  const refreshUser = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/users/profile`);
+      setInventory(res.data.inventory || {});
+
+      setUser((prev) => {
+        const updated = { ...prev, ...res.data };
+        localStorage.setItem("user", JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.error("Failed to refresh user:", err);
+    }
+  };
+
+  /* ============================================================
+      🔁 Fetch Users (Admin + Normal Users)
+  ============================================================ */
+  const fetchUsers = async () => {
+    try {
+      const endpoint =
+        user?.role === "admin"
+          ? `${API_BASE}/api/users/admin/users`
+          : `${API_BASE}/api/users/all`;
+
+      const res = await axios.get(endpoint);
+      setUsers(res.data);
+    } catch (err) {
+      console.error("Failed to fetch users:", err.response?.data || err.message);
+    }
+  };
+
+  /* ============================================================
+      🔁 When user loads or changes → fetch users + sync profile
+  ============================================================ */
   useEffect(() => {
-    const init = async () => {
-      if (user) {
-        await fetchUsers();
-              await refreshUser(); // 👈 keeps user always in sync
-        setInventory(user.inventory || {});
-      }
-    };
-    init();
+    if (user) {
+      fetchUsers();
+      refreshUser();
+    }
   }, [user]);
 
-const fetchUsers = async () => {
-  try {
-    const API_BASE = import.meta.env.VITE_API_URL;
-    const endpoint =
-      user?.role === "admin"
-        ? `${API_BASE}/api/users/admin/users`
-        : `${API_BASE}/api/users/all`;
-
-    const res = await axios.get(endpoint, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    setUsers(res.data);
-  } catch (err) {
-    console.error("Failed to fetch users:", err.response?.data || err.message);
-  }
-};
-
-  const refreshUser = async () => {
-  try {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
-    setInventory(res.data.inventory || {});
-    user.inventory = res.data.inventory;
-    user.resources = res.data.resources;
-    user.house = res.data.house;
-    user.village = res.data.village;
-    user.roads = res.data.roads;
-    user.Token = res.data.Token;
-  } catch (err) {
-    console.error("Failed to refresh user:", err);
-  }
-};
-
-
+  /* ============================================================
+      🧩 Admin Update Functions
+  ============================================================ */
   const updateInventory = async (id, card, amount) => {
     try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/users/admin/inventory/${id}`,
-        { card, amount },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      const res = await axios.put(
+        `${API_BASE}/api/users/admin/inventory/${id}`,
+        { card, amount }
       );
       fetchUsers();
-      
     } catch (err) {
       console.error("Failed to update inventory:", err);
     }
@@ -93,9 +92,8 @@ const fetchUsers = async () => {
   const updateResources = async (id, resource, amount) => {
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/users/admin/resources/${id}`,
-        { resource, amount },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        `${API_BASE}/api/users/admin/resources/${id}`,
+        { resource, amount }
       );
       fetchUsers();
     } catch (err) {
@@ -106,9 +104,8 @@ const fetchUsers = async () => {
   const updateBuildings = async (id, type, amount) => {
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/users/admin/buildings/${id}`,
-        { type, amount },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        `${API_BASE}/api/users/admin/buildings/${id}`,
+        { type, amount }
       );
       fetchUsers();
     } catch (err) {
@@ -116,60 +113,63 @@ const fetchUsers = async () => {
     }
   };
 
-const updateTokens = async (id, amount) => {
-  try {
-    const res = await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/users/admin/tokens/${id}`,
-      { amount },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-    );
+  const updateTokens = async (id, amount) => {
+    try {
+      const res = await axios.put(
+        `${API_BASE}/api/users/admin/tokens/${id}`,
+        { amount }
+      );
 
-    // ✅ Update local users array instantly (no wait for fetch)
-    setUsers((prev) =>
-      prev.map((u) =>
-        u._id === id ? { ...u, Token: res.data.tokens } : u
-      )
-    );
-  } catch (err) {
-    console.error("Failed to update tokens:", err);
-  }
-};
-
-
-const handleMysteryCard = async () => {
-  try {
-    if (user.Token <= 0) {
-      alert("❌ You don't have enough tokens!");
-      return;
+      // Update instantly
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, Token: res.data.tokens } : u
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update tokens:", err);
     }
+  };
 
-    const cards = Object.keys(cardImages);
-    const randomCard = cards[Math.floor(Math.random() * cards.length)];
+  /* ============================================================
+      🎴 Mystery Card (User Only)
+  ============================================================ */
+  const handleMysteryCard = async () => {
+    try {
+      if (user.Token <= 0) {
+        alert("❌ Not enough tokens!");
+        return;
+      }
 
-    // 🎴 Add a random card (user-safe route)
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/users/inventory/${user._id}`,
-      { card: randomCard, amount: (inventory[randomCard] || 0) + 1 },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-    );
+      const cards = Object.keys(cardImages);
+      const randomCard = cards[Math.floor(Math.random() * cards.length)];
 
-    // 🪙 Deduct one token (user-safe route)
-    await axios.put(
-      `${import.meta.env.VITE_API_URL}/api/users/tokens/${user._id}`,
-      { amount: -1 },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-    );
+      // Add card
+      await axios.put(
+        `${API_BASE}/api/users/inventory/${user._id}`,
+        {
+          card: randomCard,
+          amount: (inventory[randomCard] || 0) + 1,
+        }
+      );
 
-    alert(`🎉 You received a ${randomCard.replace(/([A-Z])/g, " $1")} card!`);
+      // Deduct token
+      await axios.put(
+        `${API_BASE}/api/users/tokens/${user._id}`,
+        { amount: -1 }
+      );
 
-    // Refresh user's inventory and tokens
-    await refreshUser();
-  } catch (err) {
-    console.error("Failed to use mystery card:", err);
-  }
-};
+      alert(`🎉 You received a ${randomCard}!`);
 
+      await refreshUser();
+    } catch (err) {
+      console.error("Failed to use mystery card:", err);
+    }
+  };
 
+  /* ============================================================
+      📝 Edit Username / Email (Admin)
+  ============================================================ */
   const handleEditClick = (u) => {
     setEditingUser(u._id);
     setEditData({ username: u.username, email: u.email });
@@ -181,11 +181,7 @@ const handleMysteryCard = async () => {
 
   const handleEditSave = async (id) => {
     try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/users/admin/edit/${id}`,
-        editData,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
+      await axios.put(`${API_BASE}/api/users/admin/edit/${id}`, editData);
       setEditingUser(null);
       fetchUsers();
     } catch (err) {
@@ -193,18 +189,26 @@ const handleMysteryCard = async () => {
     }
   };
 
-  const sumCards = (inv) => Object.values(inv || {}).reduce((a, b) => a + (b || 0), 0);
-  const sumResources = (res) => Object.values(res || {}).reduce((a, b) => a + (b || 0), 0);
+  /* ============================================================
+      🧮 Calculations
+  ============================================================ */
+  const sumCards = (inv) =>
+    Object.values(inv || {}).reduce((a, b) => a + (b || 0), 0);
+
+  const sumResources = (res) =>
+    Object.values(res || {}).reduce((a, b) => a + (b || 0), 0);
 
   const totalCards = sumCards(user?.inventory || {});
   const totalResources = sumResources(user?.resources || {});
   const totalSum = totalCards + totalResources;
 
+  /* ============================================================
+      UI Rendering
+  ============================================================ */
   return (
     <div className="relative w-screen h-screen flex items-center justify-center overflow-hidden">
       <img
         src="/Background/Bg.jpg"
-        alt="background"
         className="absolute inset-0 w-full h-full object-cover -z-10"
       />
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
@@ -214,15 +218,17 @@ const handleMysteryCard = async () => {
 
         {user ? (
           <>
+            {/* ======================== USER VIEW ======================== */}
             {user.role !== "admin" ? (
               <>
+                {/* Tabs */}
                 <div className="flex justify-center mb-6 space-x-4">
                   <button
                     onClick={() => setActiveTab("profile")}
                     className={`px-4 py-2 rounded-lg font-semibold ${
                       activeTab === "profile"
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-200 hover:bg-gray-300"
+                        : "bg-gray-200"
                     }`}
                   >
                     Profile
@@ -232,7 +238,7 @@ const handleMysteryCard = async () => {
                     className={`px-4 py-2 rounded-lg font-semibold ${
                       activeTab === "summary"
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-200 hover:bg-gray-300"
+                        : "bg-gray-200"
                     }`}
                   >
                     Summary
@@ -241,37 +247,40 @@ const handleMysteryCard = async () => {
 
                 {activeTab === "profile" && (
                   <>
-                    <h2 className="text-3xl font-bold mb-4 text-gray-900 drop-shadow-md">
+                    <h2 className="text-3xl font-bold mb-4 text-gray-900">
                       Welcome, {user.username}
                     </h2>
-                    <p className="text-gray-700 mb-6 font-medium">Role: {user.role}</p>
+
+                    <p className="text-gray-700 mb-6 font-medium">
+                      Role: {user.role}
+                    </p>
 
                     {/* Cards */}
                     <div className="text-left bg-white/80 p-4 rounded-lg mb-6 shadow-md">
-                      <h3 className="text-lg font-semibold mb-3 text-gray-800">Your Cards:</h3>
+                      <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                        Your Cards:
+                      </h3>
+
                       {Object.keys(cardImages).map((card) => (
                         <div
                           key={card}
-                          className="flex items-center gap-3 bg-white hover:bg-gray-50 rounded-md p-2 mb-2 shadow-sm border border-gray-200"
+                          className="flex items-center gap-3 bg-white hover:bg-gray-50 rounded-md p-2 mb-2 shadow-sm border"
                         >
                           <img
                             src={cardImages[card]}
-                            alt={card}
-                            className="w-8 h-8 rounded-md border border-gray-300 object-cover"
+                            className="w-8 h-8 rounded-md border"
                           />
-                          <span className="capitalize text-gray-700 font-medium flex-1">
+                          <span className="capitalize flex-1">
                             {card.replace(/([A-Z])/g, " $1")}:
                           </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold">
                             {inventory?.[card] ?? 0}
                           </span>
                         </div>
                       ))}
+
                       <p className="text-lg font-semibold text-yellow-500 mt-2">
                         🏆 Score: {user.score}
-                      </p>
-                      <p className="mt-3 font-semibold text-gray-900">
-                        Total Cards: {totalCards}
                       </p>
                     </div>
 
@@ -280,49 +289,44 @@ const handleMysteryCard = async () => {
                       <h3 className="text-lg font-semibold mb-3 text-gray-800">
                         Your Resources:
                       </h3>
+
                       {Object.keys(resourceImages).map((res) => (
                         <div
                           key={res}
-                          className="flex items-center gap-3 bg-white hover:bg-gray-50 rounded-md p-2 mb-2 shadow-sm border border-gray-200"
+                          className="flex items-center gap-3 bg-white hover:bg-gray-50 rounded-md p-2 mb-2 shadow-sm border"
                         >
                           <img
                             src={resourceImages[res]}
-                            alt={res}
-                            className="w-8 h-8 rounded-md border border-gray-300 object-cover"
+                            className="w-8 h-8 rounded-md border"
                           />
-                          <span className="capitalize text-gray-700 font-medium flex-1">
-                            {res}
-                          </span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="capitalize flex-1">{res}</span>
+                          <span className="font-semibold">
                             {user?.resources?.[res] ?? 0}
                           </span>
                         </div>
                       ))}
-                      <p className="mt-3 font-semibold text-gray-900">
-                        Total Resources: {totalResources}
-                      </p>
                     </div>
 
                     {/* Buildings */}
                     <div className="text-left bg-white/80 p-4 rounded-lg mb-4 shadow-md">
                       <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                        Your Buildings:
+                        Buildings:
                       </h3>
-                      <div className="space-y-2">
-                        <p className="font-medium text-gray-700">🏠 Houses: {user.house ?? 0}</p>
-                        <p className="font-medium text-gray-700">🏡 Villages: {user.village ?? 0}</p>
-                        <p className="font-medium text-gray-700">🛣️ Roads: {user.roads ?? 0}</p>
-                      </div>
+
+                      <p>🏠 Houses: {user.house ?? 0}</p>
+                      <p>🏡 Villages: {user.village ?? 0}</p>
+                      <p>🛣️ Roads: {user.roads ?? 0}</p>
                     </div>
 
-                    {/* Tokens + Mystery Card */}
-                    <div className="bg-white/80 p-4 rounded-lg shadow-md text-center">
-                      <p className="font-semibold text-gray-800 mb-2">
+                    {/* Tokens */}
+                    <div className="bg-white/80 p-4 rounded-lg shadow-md">
+                      <p className="font-semibold mb-2">
                         🎟️ Tokens: {user.Token ?? 0}
                       </p>
+
                       <button
                         onClick={handleMysteryCard}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-bold shadow-md transition-all"
+                        className="bg-purple-600 text-white px-6 py-3 rounded-xl"
                       >
                         🎴 Mystery Card
                       </button>
@@ -330,46 +334,42 @@ const handleMysteryCard = async () => {
                   </>
                 )}
 
+                {/* ======================== SUMMARY TAB ======================== */}
                 {activeTab === "summary" && (
-                  <div className="animate-fadeIn">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-6 drop-shadow">
-                      Overall Summary
-                    </h3>
-                    <div className="bg-white/80 p-4 rounded-lg shadow-md mb-6">
-                      <p className="text-lg font-semibold mb-3 text-gray-700">
-                        {user.username}'s Totals:
-                      </p>
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border p-2">🏆 Score</th>
-                            <th className="border p-2">🃏 Total Cards</th>
-                            <th className="border p-2">🌾 Total Resources</th>
-                            <th className="border p-2">📊 Combined Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td className="border p-2">{user.score ?? 0}</td>
-                            <td className="border p-2">{totalCards}</td>
-                            <td className="border p-2">{totalResources}</td>
-                            <td className="border p-2 font-bold text-blue-700">{totalSum}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-6">Overall Summary</h3>
 
-                    <div className="bg-white/80 p-4 rounded-lg shadow-md">
-                      <h3 className="text-lg font-bold mb-3 text-gray-800">Other Teams:</h3>
+                    <table className="w-full mb-6">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="border p-2">🏆 Score</th>
+                          <th className="border p-2">🃏 Cards</th>
+                          <th className="border p-2">🌾 Resources</th>
+                          <th className="border p-2">📊 Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="border p-2">{user.score ?? 0}</td>
+                          <td className="border p-2">{totalCards}</td>
+                          <td className="border p-2">{totalResources}</td>
+                          <td className="border p-2">{totalSum}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <div>
+                      <h3 className="text-lg font-bold mb-3">Other Teams:</h3>
+
                       {users
                         .filter((u) => u.role !== "admin" && u._id !== user._id)
                         .map((u) => (
                           <div
                             key={u._id}
-                            className="flex justify-between items-center bg-white rounded-md p-3 mb-2 border border-gray-200"
+                            className="flex justify-between p-3 mb-2 border bg-white rounded"
                           >
-                            <span className="font-medium text-gray-800">{u.username}</span>
-                            <span className="text-sm text-gray-600">
+                            <span>{u.username}</span>
+                            <span>
                               🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} | 🏆{" "}
                               {u.score ?? 0}
                             </span>
@@ -380,117 +380,99 @@ const handleMysteryCard = async () => {
                 )}
               </>
             ) : (
-              // 🧩 ADMIN PANEL
+              /* ======================== ADMIN VIEW ======================== */
               <div>
-                <h3 className="text-xl font-bold mb-4 text-gray-900 drop-shadow">
-                  Admin Panel – Manage Teams
-                </h3>
+                <h3 className="text-xl font-bold mb-4">Admin Panel</h3>
 
                 {users
                   .filter((u) => u.role !== "admin")
                   .map((u) => (
-                    <div
-                      key={u._id}
-                      className="border border-gray-200 p-4 rounded-lg mb-4 text-left bg-white/80 shadow-lg hover:shadow-xl transition-all"
-                    >
+                    <div key={u._id} className="border p-4 rounded mb-4 bg-white/90">
+                      {/* Edit User */}
                       {editingUser === u._id ? (
-                        <div className="mb-3">
+                        <div>
                           <input
                             className="border p-2 rounded w-full mb-2"
-                            type="text"
                             name="username"
                             value={editData.username}
                             onChange={handleEditChange}
-                            placeholder="Username"
                           />
                           <input
                             className="border p-2 rounded w-full mb-2"
-                            type="email"
                             name="email"
                             value={editData.email}
                             onChange={handleEditChange}
-                            placeholder="Email"
                           />
                           <button
+                            className="bg-green-500 text-white px-4 py-2 rounded"
                             onClick={() => handleEditSave(u._id)}
-                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"
                           >
                             Save
                           </button>
-                          <button
-                            onClick={() => setEditingUser(null)}
-                            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                          >
-                            Cancel
-                          </button>
                         </div>
                       ) : (
-                        <div className="mb-3 flex justify-between items-center">
-                          <p className="font-semibold text-gray-800">
+                        <div className="flex justify-between">
+                          <p>
                             {u.username} ({u.email})
                           </p>
                           <button
+                            className="bg-blue-500 text-white px-3 py-1 rounded"
                             onClick={() => handleEditClick(u)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                           >
                             Edit
                           </button>
                         </div>
                       )}
 
-                      <p className="text-gray-800 font-medium mb-2">
-                        🏆 Score:{" "}
-                        <span className="text-yellow-600 font-bold">{u.score ?? 0}</span>
-                      </p>
+                      {/* Score */}
+                      <p className="mt-2">🏆 Score: {u.score ?? 0}</p>
 
-                      {/* 🪙 Tokens */}
-                      <h4 className="font-semibold text-gray-800 mt-4 mb-2">Tokens:</h4>
-                      <div className="flex justify-between items-center bg-white rounded-md p-2 border border-gray-200">
-                        <span className="font-medium text-gray-700">🎟️ Tokens</span>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => updateTokens(u._id, -1)}
-                            className="px-2 bg-red-500 text-white rounded hover:bg-red-600"
-                          >
-                            -
-                          </button>
-                          <span>{u.Token ?? 0}</span>
-                          <button
-                            onClick={() => updateTokens(u._id, 1)}
-                            className="px-2 bg-green-500 text-white rounded hover:bg-green-600"
-                          >
-                            +
-                          </button>
+                      {/* Tokens */}
+                      <div className="mt-3">
+                        <h4 className="font-semibold">Tokens:</h4>
+                        <div className="flex justify-between p-2 border rounded bg-white">
+                          <span>🎟️ Tokens</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateTokens(u._id, -1)}
+                              className="px-2 bg-red-500 text-white rounded"
+                            >
+                              -
+                            </button>
+                            <span>{u.Token ?? 0}</span>
+                            <button
+                              onClick={() => updateTokens(u._id, 1)}
+                              className="px-2 bg-green-500 text-white rounded"
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
                       </div>
 
                       {/* Cards */}
-                      <h4 className="font-semibold text-gray-800 mt-4 mb-2">Cards:</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      <div className="mt-4">
+                        <h4 className="font-semibold">Cards:</h4>
                         {Object.entries(u.inventory || {}).map(([card, count]) => (
                           <div
                             key={card}
-                            className="flex justify-between items-center bg-white rounded-md p-2 border border-gray-200"
+                            className="flex justify-between p-2 border rounded bg-white mb-1"
                           >
                             <div className="flex items-center gap-2">
-                              <img
-                                src={cardImages[card]}
-                                alt={card}
-                                className="w-6 h-6 rounded-md border border-gray-300 object-cover"
-                              />
+                              <img src={cardImages[card]} className="w-6 h-6" />
                               <span className="capitalize">{card}</span>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => updateInventory(u._id, card, count - 1)}
-                                className="px-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                className="px-2 bg-red-500 text-white rounded"
                               >
                                 -
                               </button>
                               <span>{count}</span>
                               <button
                                 onClick={() => updateInventory(u._id, card, count + 1)}
-                                className="px-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                className="px-2 bg-green-500 text-white rounded"
                               >
                                 +
                               </button>
@@ -500,32 +482,28 @@ const handleMysteryCard = async () => {
                       </div>
 
                       {/* Resources */}
-                      <h4 className="font-semibold text-gray-800 mt-4 mb-2">Resources:</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      <div className="mt-4">
+                        <h4 className="font-semibold">Resources:</h4>
                         {Object.entries(u.resources || {}).map(([res, amount]) => (
                           <div
                             key={res}
-                            className="flex justify-between items-center bg-white rounded-md p-2 border border-gray-200"
+                            className="flex justify-between p-2 border rounded bg-white mb-1"
                           >
                             <div className="flex items-center gap-2">
-                              <img
-                                src={resourceImages[res]}
-                                alt={res}
-                                className="w-6 h-6 rounded-md border border-gray-300 object-cover"
-                              />
+                              <img src={resourceImages[res]} className="w-6 h-6" />
                               <span className="capitalize">{res}</span>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => updateResources(u._id, res, amount - 1)}
-                                className="px-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                className="px-2 bg-red-500 text-white rounded"
                               >
                                 -
                               </button>
                               <span>{amount}</span>
                               <button
                                 onClick={() => updateResources(u._id, res, amount + 1)}
-                                className="px-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                className="px-2 bg-green-500 text-white rounded"
                               >
                                 +
                               </button>
@@ -535,20 +513,20 @@ const handleMysteryCard = async () => {
                       </div>
 
                       {/* Buildings */}
-                      <h4 className="font-semibold text-gray-800 mt-4 mb-2">Buildings:</h4>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="mt-4">
+                        <h4 className="font-semibold">Buildings:</h4>
                         {["house", "village", "roads"].map((b) => (
                           <div
                             key={b}
-                            className="flex justify-between items-center bg-white rounded-md p-2 border border-gray-200"
+                            className="flex justify-between p-2 border rounded bg-white mb-1"
                           >
-                            <span className="capitalize font-medium text-gray-700">{b}</span>
-                            <div className="flex items-center space-x-2">
+                            <span className="capitalize">{b}</span>
+                            <div className="flex gap-2">
                               <button
                                 onClick={() =>
                                   updateBuildings(u._id, b, Math.max(0, u[b] - 1))
                                 }
-                                className="px-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                className="px-2 bg-red-500 text-white rounded"
                               >
                                 -
                               </button>
@@ -557,7 +535,7 @@ const handleMysteryCard = async () => {
                                 onClick={() =>
                                   updateBuildings(u._id, b, (u[b] ?? 0) + 1)
                                 }
-                                className="px-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                className="px-2 bg-green-500 text-white rounded"
                               >
                                 +
                               </button>
@@ -572,21 +550,15 @@ const handleMysteryCard = async () => {
           </>
         ) : (
           <div>
-            <h2 className="text-2xl font-bold mb-6 text-white drop-shadow-md">Welcome!</h2>
-            <p className="text-xl font-semibold mb-6 text-white drop-shadow-md">
-              Please log in or register
-            </p>
+            <h2 className="text-2xl font-bold mb-6 text-white">
+              Welcome!
+            </h2>
+            <p className="text-xl mb-6 text-white">Please log in or register</p>
             <div className="flex flex-col space-y-4">
-              <Link
-                className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 font-medium shadow-md"
-                to="/login"
-              >
+              <Link className="bg-blue-600 text-white p-3 rounded" to="/login">
                 Login
               </Link>
-              <Link
-                className="w-full bg-gray-200 text-gray-800 p-3 rounded-md hover:bg-gray-300 font-medium shadow-md"
-                to="/register"
-              >
+              <Link className="bg-gray-200 p-3 rounded" to="/register">
                 Register
               </Link>
             </div>
