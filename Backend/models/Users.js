@@ -15,10 +15,10 @@ const userSchema = new mongoose.Schema({
   },
   resources: {
     wood: { type: Number, default: 0 },
-    stone: { type: Number, default: 0 },
+    brick: { type: Number, default: 0 },
     iron: { type: Number, default: 0 },
     wheat: { type: Number, default: 0 },
-    lamb: { type: Number, default: 0 },
+    sheep: { type: Number, default: 0 },
   },
   Token: {type: Number, defult:0},
   house: { type: Number, default: 2 },
