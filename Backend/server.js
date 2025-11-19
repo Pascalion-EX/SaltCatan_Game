@@ -4,8 +4,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRoutes from "./routes/auth.js";
 import { connectDB } from "./config/db.js";
-import tradeRoutes from "./routes/tradeRoutes.js";
-
 dotenv.config();
 
 const app = express();
@@ -23,7 +21,6 @@ app.use(express.json());
 
 // ✅ Routes
 app.use("/api/users", authRoutes);
-app.use("/api/trade", tradeRoutes);
 
 
 // ✅ MongoDB

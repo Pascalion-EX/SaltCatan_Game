@@ -333,63 +333,76 @@ router.put("/admin/tokens/:id", protect, adminOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-/* ===============================
-    USER — CREATE TRADE REQUEST
-================================ */
-router.post("/create", auth, async (req, res) => {
+/* ---------------------------------------
+   USER — CREATE A TRADE
+---------------------------------------- */
+router.post("/create", protect, async (req, res) => {
   try {
     const { offer, want } = req.body;
+
+    if (!offer || !want) {
+      return res.status(400).json({ message: "Offer and want are required" });
+    }
 
     const trade = await Trade.create({
       offer,
       want,
-      user: req.user.id,
+      user: req.user._id,
     });
 
-    res.json(trade);
+    res.status(201).json(trade);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("TRADE CREATE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-/* ===============================
-    ADMIN — GET ALL TRADES
-================================ */
-router.get("/all", auth, async (req, res) => {
+/* ---------------------------------------
+   ADMIN — GET ALL TRADES
+---------------------------------------- */
+router.get("/all", protect, adminOnly, async (req, res) => {
   try {
-    if (req.user.role !== "admin")
-      return res.status(403).json({ error: "Access denied" });
-
     const trades = await Trade.find()
-      .populate("user", "username email")
+      .populate("user", "username email role")
       .sort({ createdAt: -1 });
 
-    res.json(trades);
+    res.status(200).json(trades);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("TRADE FETCH ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-/* ===============================
-    ADMIN — ACCEPT / DECLINE TRADE
-================================ */
-router.put("/update/:id", auth, async (req, res) => {
+/* ---------------------------------------
+   ADMIN — UPDATE TRADE STATUS
+---------------------------------------- */
+router.put("/update/:id", protect, adminOnly, async (req, res) => {
   try {
-    if (req.user.role !== "admin")
-      return res.status(403).json({ error: "Access denied" });
+    const { status } = req.body;
 
-    const trade = await Trade.findByIdAndUpdate(
+    if (!["accepted", "declined"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const updated = await Trade.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
+      { status },
       { new: true }
     );
 
-    res.json(trade);
+    if (!updated) {
+      return res.status(404).json({ message: "Trade not found" });
+    }
+
+    res.status(200).json(updated);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("TRADE UPDATE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
-
 
 
 export default router;
