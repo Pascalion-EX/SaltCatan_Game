@@ -20,7 +20,7 @@ export default function TradePopup({ user }) {
 
     try {
       await axios.post(
-        `${API_BASE}/api/trade/create`,
+        `${API_BASE}/api/users/trade/create`,   // <--- UPDATED
         { offer, want },
         {
           headers: {
@@ -45,7 +45,7 @@ export default function TradePopup({ user }) {
     if (user.role !== "admin") return;
 
     try {
-      const res = await axios.get(`${API_BASE}/api/trade/all`, {
+      const res = await axios.get(`${API_BASE}/api/users/trade/all`, {   // <--- UPDATED
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,7 +71,7 @@ export default function TradePopup({ user }) {
   const updateTrade = async (id, status) => {
     try {
       await axios.put(
-        `${API_BASE}/api/trade/update/${id}`,
+        `${API_BASE}/api/users/trade/update/${id}`,  // <--- UPDATED
         { status },
         {
           headers: {
@@ -97,7 +97,7 @@ export default function TradePopup({ user }) {
         Trade
         {user?.role === "admin" && trades.length > 0 && (
           <span className="ml-2 bg-red-500 px-2 py-1 rounded-full text-xs">
-            {trades.filter(t => t.status === "pending").length}
+            {trades.filter((t) => t.status === "pending").length}
           </span>
         )}
       </button>
@@ -138,7 +138,7 @@ export default function TradePopup({ user }) {
             <div>
               <h2 className="font-bold mb-3">Trade Requests</h2>
 
-              {trades.filter(t => t.status === "pending").length === 0 && (
+              {trades.filter((t) => t.status === "pending").length === 0 && (
                 <p className="text-gray-500">No pending trades.</p>
               )}
 
@@ -146,9 +146,15 @@ export default function TradePopup({ user }) {
                 .filter((t) => t.status === "pending")
                 .map((t) => (
                   <div key={t._id} className="border p-2 rounded mb-3">
-                    <p><b>User:</b> {t.user?.username}</p>
-                    <p><b>Offer:</b> {t.offer}</p>
-                    <p><b>Want:</b> {t.want}</p>
+                    <p>
+                      <b>User:</b> {t.user?.username}
+                    </p>
+                    <p>
+                      <b>Offer:</b> {t.offer}
+                    </p>
+                    <p>
+                      <b>Want:</b> {t.want}
+                    </p>
 
                     <div className="flex gap-2 mt-2">
                       <button
