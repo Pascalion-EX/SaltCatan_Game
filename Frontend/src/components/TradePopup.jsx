@@ -25,7 +25,7 @@ export default function TradePopup({ user }) {
       className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700 z-[9999]"
       >
         Trade
-        {user?.role === "admin" && notifications.length > 0 && (
+        {user?.role === "Admin" && notifications.length > 0 && (
           <span className="ml-2 bg-red-500 px-2 py-1 rounded-full text-xs">
             {notifications.length}
           </span>
@@ -36,7 +36,7 @@ export default function TradePopup({ user }) {
       {open && (
         <div className="fixed bottom-20 right-6 w-72 bg-white shadow-xl p-4 rounded-lg border z-[99999]">
           {/* USER VIEW */}
-          {user?.role !== "admin" && (
+          {user?.role !== "Admin" && (
             <div>
               <h2 className="font-bold mb-2">Request Trade</h2>
 
@@ -64,7 +64,7 @@ export default function TradePopup({ user }) {
           )}
 
           {/* ADMIN VIEW */}
-          {user?.role === "admin" && (
+          {user?.role === "Admin" && (
             <div>
               <h2 className="font-bold mb-3">Trade Requests</h2>
 
