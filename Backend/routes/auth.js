@@ -2,6 +2,8 @@ import express from "express";
 import User from "../models/Users.js";
 import jwt from "jsonwebtoken";
 import { protect, adminOnly } from "../middleware/auth.js";
+import Trade from "../models/Trade.js";
+
 
 const router = express.Router();
 
