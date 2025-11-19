@@ -22,7 +22,7 @@ export default function TradePopup({ user }) {
       {/* Floating Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700"
+      className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700 z-[9999]"
       >
         Trade
         {user?.role === "admin" && notifications.length > 0 && (
@@ -34,7 +34,7 @@ export default function TradePopup({ user }) {
 
       {/* Popup Panel */}
       {open && (
-        <div className="fixed bottom-20 right-6 w-72 bg-white shadow-xl p-4 rounded-lg border">
+        <div className="fixed bottom-20 right-6 w-72 bg-white shadow-xl p-4 rounded-lg border z-[99999]">
           {/* USER VIEW */}
           {user?.role !== "admin" && (
             <div>
