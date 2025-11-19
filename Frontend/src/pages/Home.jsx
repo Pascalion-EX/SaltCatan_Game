@@ -123,7 +123,7 @@ const Home = ({ user, setUser, error }) => {
       // Update instantly
       setUsers((prev) =>
         prev.map((u) =>
-          u._id === id ? { ...u, Token: res.data.tokens } : u
+          u._id === id ? { ...u, Token: res.data.Token } : u
         )
       );
     } catch (err) {
