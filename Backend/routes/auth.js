@@ -335,7 +335,9 @@ router.put("/admin/tokens/:id", protect, adminOnly, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-// USER — CREATE TRADE
+/* ---------------------------------------
+   USER — CREATE A TRADE
+---------------------------------------- */
 router.post("/trade/create", protect, async (req, res) => {
   try {
     const { offer, want } = req.body;
@@ -348,7 +350,7 @@ router.post("/trade/create", protect, async (req, res) => {
       offer,
       want,
       user: req.user._id,
-      status: "pending",
+      status: "pending"
     });
 
     res.status(201).json(trade);
@@ -359,7 +361,9 @@ router.post("/trade/create", protect, async (req, res) => {
   }
 });
 
-// ADMIN — GET ALL TRADES
+/* ---------------------------------------
+   ADMIN — GET ALL TRADES
+---------------------------------------- */
 router.get("/trade/all", protect, adminOnly, async (req, res) => {
   try {
     const trades = await Trade.find()
@@ -374,7 +378,9 @@ router.get("/trade/all", protect, adminOnly, async (req, res) => {
   }
 });
 
-// ADMIN — UPDATE TRADE STATUS
+/* ---------------------------------------
+   ADMIN — UPDATE TRADE STATUS
+---------------------------------------- */
 router.put("/trade/update/:id", protect, adminOnly, async (req, res) => {
   try {
     const { status } = req.body;
