@@ -1,20 +1,90 @@
-import { useState, useContext } from "react";
-import { TradeContext } from "../context/TradeContext";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function TradePopup({ user }) {
-  const { notifications, sendTrade, removeTrade } = useContext(TradeContext);
   const [open, setOpen] = useState(false);
 
   const [offer, setOffer] = useState("");
   const [want, setWant] = useState("");
 
-  const handleSend = () => {
+  const [trades, setTrades] = useState([]); // admin only
+  const API_BASE = import.meta.env.VITE_API_URL;
+
+  const token = localStorage.getItem("token");
+
+  /* ============================
+      USER — SEND TRADE
+  ============================ */
+  const handleSend = async () => {
     if (!offer || !want) return alert("Enter trade details");
 
-    sendTrade(offer, want);
-    setOffer("");
-    setWant("");
-    alert("Trade sent!");
+    try {
+      await axios.post(
+        `${API_BASE}/api/trade/create`,
+        { offer, want },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert("Trade sent!");
+      setOffer("");
+      setWant("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send trade");
+    }
+  };
+
+  /* ============================
+      ADMIN — FETCH ALL TRADES
+  ============================ */
+  const fetchTrades = async () => {
+    if (user.role !== "admin") return;
+
+    try {
+      const res = await axios.get(`${API_BASE}/api/trade/all`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setTrades(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Auto-refresh trades for admin
+  useEffect(() => {
+    if (user.role === "admin") {
+      fetchTrades();
+      const interval = setInterval(fetchTrades, 3000); // refresh every 3 sec
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  /* ============================
+      ADMIN — UPDATE TRADE
+  ============================ */
+  const updateTrade = async (id, status) => {
+    try {
+      await axios.put(
+        `${API_BASE}/api/trade/update/${id}`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      fetchTrades(); // refresh after update
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update trade");
+    }
   };
 
   return (
@@ -22,12 +92,12 @@ export default function TradePopup({ user }) {
       {/* Floating Button */}
       <button
         onClick={() => setOpen(!open)}
-      className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700 z-[9999]"
+        className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700 z-[9999]"
       >
         Trade
-        {user?.role === "Admin" && notifications.length > 0 && (
+        {user?.role === "admin" && trades.length > 0 && (
           <span className="ml-2 bg-red-500 px-2 py-1 rounded-full text-xs">
-            {notifications.length}
+            {trades.filter(t => t.status === "pending").length}
           </span>
         )}
       </button>
@@ -36,7 +106,7 @@ export default function TradePopup({ user }) {
       {open && (
         <div className="fixed bottom-20 right-6 w-72 bg-white shadow-xl p-4 rounded-lg border z-[99999]">
           {/* USER VIEW */}
-          {user?.role !== "Admin" && (
+          {user?.role !== "admin" && (
             <div>
               <h2 className="font-bold mb-2">Request Trade</h2>
 
@@ -64,42 +134,39 @@ export default function TradePopup({ user }) {
           )}
 
           {/* ADMIN VIEW */}
-          {user?.role === "Admin" && (
+          {user?.role === "admin" && (
             <div>
               <h2 className="font-bold mb-3">Trade Requests</h2>
 
-              {notifications.length === 0 && (
+              {trades.filter(t => t.status === "pending").length === 0 && (
                 <p className="text-gray-500">No pending trades.</p>
               )}
 
-              {notifications.map((t) => (
-                <div key={t.id} className="border p-2 rounded mb-3">
-                  <p><b>Offer:</b> {t.offer}</p>
-                  <p><b>Wants:</b> {t.want}</p>
+              {trades
+                .filter((t) => t.status === "pending")
+                .map((t) => (
+                  <div key={t._id} className="border p-2 rounded mb-3">
+                    <p><b>User:</b> {t.user?.username}</p>
+                    <p><b>Offer:</b> {t.offer}</p>
+                    <p><b>Want:</b> {t.want}</p>
 
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => {
-                        alert("Trade Accepted!");
-                        removeTrade(t.id);
-                      }}
-                      className="flex-1 bg-green-600 text-white p-1 rounded"
-                    >
-                      Accept
-                    </button>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => updateTrade(t._id, "accepted")}
+                        className="flex-1 bg-green-600 text-white p-1 rounded"
+                      >
+                        Accept
+                      </button>
 
-                    <button
-                      onClick={() => {
-                        alert("Trade Declined.");
-                        removeTrade(t.id);
-                      }}
-                      className="flex-1 bg-red-600 text-white p-1 rounded"
-                    >
-                      Decline
-                    </button>
+                      <button
+                        onClick={() => updateTrade(t._id, "declined")}
+                        className="flex-1 bg-red-600 text-white p-1 rounded"
+                      >
+                        Decline
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>
