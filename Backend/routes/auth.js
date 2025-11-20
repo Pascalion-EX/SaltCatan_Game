@@ -364,7 +364,7 @@ router.post("/trade/create", protect, async (req, res) => {
 /* ---------------------------------------
    ADMIN — GET ALL TRADES
 ---------------------------------------- */
-router.get("/trade/all", protect, adminOnly, async (req, res) => {
+router.get("/trade/all", protect, async (req, res) => {
   try {
     const trades = await Trade.find()
       .populate("user", "username email role")
