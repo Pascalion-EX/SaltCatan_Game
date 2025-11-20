@@ -371,7 +371,7 @@ const Home = ({ user, setUser, error }) => {
                             <span>{u.username}</span>
                             <span>
                               🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} | 🏆{" "}
-                              {u.score ?? 0}
+                              {u.score ?? 0} | 🌾 {u.totalResources} | 🃏 {u.totalCards}
                             </span>
                           </div>
                         ))}
