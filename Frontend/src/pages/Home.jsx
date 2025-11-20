@@ -364,7 +364,10 @@ const Home = ({ user, setUser, error }) => {
 
                       {users
                         .filter((u) => u.role !== "admin" && u._id !== user._id)
-                        .map((u) => (
+                        .map((u) => {
+                          const teamCards = sumCards(u.inventory || {});
+                          const teamResources = sumResources(u.resources || {});
+                        
                           
                           <div
                             key={u._id}
@@ -375,11 +378,11 @@ const Home = ({ user, setUser, error }) => {
                             <span>
                               
                               🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} | 🏆{" "}
-                              {u.score ?? 0} |🌾 {sumResources(u.resources)} | 🃏 {sumCards(u.inventory)}
+                              {u.score ?? 0} |🌾 {teamResources} | 🃏 {teamCards}
 
                             </span>
                           </div>
-                        ))}
+                    })}
                     </div>
                   </div>
                 )}
