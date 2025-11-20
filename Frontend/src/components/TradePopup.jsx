@@ -7,7 +7,7 @@ export default function TradePopup({ user }) {
   const [offer, setOffer] = useState("");
   const [want, setWant] = useState("");
 
-  const [trades, setTrades] = useState([]); // admin only
+  const [trades, setTrades] = useState([]);
   const API_BASE = import.meta.env.VITE_API_URL;
 
   const token = localStorage.getItem("token");
@@ -20,7 +20,7 @@ export default function TradePopup({ user }) {
 
     try {
       await axios.post(
-        `${API_BASE}/api/users/trade/create`,   // <--- UPDATED
+        `${API_BASE}/api/users/trade/create`,
         { offer, want },
         {
           headers: {
@@ -32,6 +32,7 @@ export default function TradePopup({ user }) {
       alert("Trade sent!");
       setOffer("");
       setWant("");
+      fetchAllTrades();
     } catch (err) {
       console.error(err);
       alert("Failed to send trade");
@@ -39,31 +40,20 @@ export default function TradePopup({ user }) {
   };
 
   /* ============================
-      ADMIN — FETCH ALL TRADES
+      FETCH ALL TRADES (USER + ADMIN)
   ============================ */
-  const fetchTrades = async () => {
-    if (user.role !== "admin") return;
-
+  const fetchAllTrades = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/users/trade/all`, {   // <--- UPDATED
+      const res = await axios.get(`${API_BASE}/api/users/trade/all`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setTrades(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("TRADE FETCH ERROR:", err);
     }
   };
-
-  // Auto-refresh trades for admin
-  useEffect(() => {
-    if (user.role === "admin") {
-      fetchTrades();
-      const interval = setInterval(fetchTrades, 3000); // refresh every 3 sec
-      return () => clearInterval(interval);
-    }
-  }, [user]);
 
   /* ============================
       ADMIN — UPDATE TRADE
@@ -71,7 +61,7 @@ export default function TradePopup({ user }) {
   const updateTrade = async (id, status) => {
     try {
       await axios.put(
-        `${API_BASE}/api/users/trade/update/${id}`,  // <--- UPDATED
+        `${API_BASE}/api/users/trade/update/${id}`,
         { status },
         {
           headers: {
@@ -80,12 +70,21 @@ export default function TradePopup({ user }) {
         }
       );
 
-      fetchTrades(); // refresh after update
+      fetchAllTrades();
     } catch (err) {
       console.error(err);
       alert("Failed to update trade");
     }
   };
+
+  // Auto-fetch for admin every 3 seconds
+  useEffect(() => {
+    fetchAllTrades();
+    if (user.role === "admin") {
+      const interval = setInterval(fetchAllTrades, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   return (
     <>
@@ -95,17 +94,19 @@ export default function TradePopup({ user }) {
         className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700 z-[9999]"
       >
         Trade
-        {user?.role === "admin" && trades.length > 0 && (
-          <span className="ml-2 bg-red-500 px-2 py-1 rounded-full text-xs">
-            {trades.filter((t) => t.status === "pending").length}
-          </span>
-        )}
+        {trades.filter((t) => t.status === "pending").length > 0 &&
+          user?.role === "admin" && (
+            <span className="ml-2 bg-red-500 px-2 py-1 rounded-full text-xs">
+              {trades.filter((t) => t.status === "pending").length}
+            </span>
+          )}
       </button>
 
       {/* Popup Panel */}
       {open && (
-        <div className="fixed bottom-20 right-6 w-72 bg-white shadow-xl p-4 rounded-lg border z-[99999]">
-          {/* USER VIEW */}
+        <div className="fixed bottom-20 right-6 w-72 bg-white shadow-xl p-4 rounded-lg border z-[99999] overflow-y-auto max-h-96">
+          
+          {/* USER SEND TRADE */}
           {user?.role !== "admin" && (
             <div>
               <h2 className="font-bold mb-2">Request Trade</h2>
@@ -126,14 +127,45 @@ export default function TradePopup({ user }) {
 
               <button
                 onClick={handleSend}
-                className="w-full bg-black text-white p-2 rounded"
+                className="w-full bg-black text-white p-2 rounded mb-4"
               >
                 Send
               </button>
             </div>
           )}
 
-          {/* ADMIN VIEW */}
+          {/* SHOW ALL TRADES TO NORMAL USERS (READ-ONLY) */}
+          {user?.role !== "admin" && (
+            <div>
+              <h2 className="font-bold mb-2">Other Trades</h2>
+
+              {trades.length === 0 && (
+                <p className="text-gray-500 text-sm">No trades yet.</p>
+              )}
+
+              {trades.map((t) => (
+                <div
+                  key={t._id}
+                  className="border p-2 rounded mb-3 bg-gray-100"
+                >
+                  <p>
+                    <b>User:</b> {t.user?.username}
+                  </p>
+                  <p>
+                    <b>Offer:</b> {t.offer}
+                  </p>
+                  <p>
+                    <b>Want:</b> {t.want}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Status: <b>{t.status}</b>
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ADMIN VIEW WITH ACCEPT/DECLINE */}
           {user?.role === "admin" && (
             <div>
               <h2 className="font-bold mb-3">Trade Requests</h2>

@@ -188,7 +188,7 @@ router.get("/admin/users", protect, adminOnly, async (req, res) => {
   try {
     const users = await User.find(
       {},
-      "username email inventory resources house village roads role"
+      "username email inventory resources house village roads role Token"
     );
 
     const formatted = users.map((u) => ({
