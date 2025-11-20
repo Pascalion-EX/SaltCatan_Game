@@ -375,7 +375,8 @@ const Home = ({ user, setUser, error }) => {
                             <span>
                               
                               🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} | 🏆{" "}
-                              {u.score ?? 0} | 🌾 {u.totalResources} | 🃏 {u.totalCards}
+                              {u.score ?? 0} |🌾 {sumResources(u.resources)} | 🃏 {sumCards(u.inventory)}
+
                             </span>
                           </div>
                         ))}
