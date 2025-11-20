@@ -30,13 +30,6 @@ const Home = ({ user, setUser, error }) => {
 
   const API_BASE = import.meta.env.VITE_API_URL;
 
-  const computeTotals = (u) => {
-    const cards = sumCards(u.inventory || {});
-    const resources = sumResources(u.resources || {});
-    return { cards, resources, total: cards + resources };
-};
-
-
   /* ============================================================
       🔁 Sync local user with backend (profile refresh)
   ============================================================ */
@@ -368,35 +361,27 @@ const Home = ({ user, setUser, error }) => {
 
                     <div>
                       <h3 className="text-lg font-bold mb-3">Other Teams:</h3>
-                            {users
-  .filter((u) => u.role !== "admin" && u._id !== user._id)
-  .map((u) => {
-    const totalCards = Object.values(u.inventory || {}).reduce(
-      (a, b) => a + (b || 0), 0
-    );
-    const totalResources = Object.values(u.resources || {}).reduce(
-      (a, b) => a + (b || 0), 0
-    );
-    const total = totalCards + totalResources;
 
-    return (
-      <div
-        key={u._id}
-        className="flex justify-between p-3 mb-2 border bg-white rounded"
-      >
-        <span>{u.username}</span>
-        <span>
-          🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} |
-          🏆 {u.score ?? 0} | 🌾 {totalResources} | 🃏 {totalCards} | 📊 {total}
-        </span>
-      </div>
-    );
-  })}
-
-</div>     {/* CLOSES "Other Teams" wrapper */}
-</div>
-)}  
-
+                      {users
+                        .filter((u) => u.role !== "admin" && u._id !== user._id)
+                        .map((u) => (
+                          
+                          <div
+                            key={u._id}
+                            className="flex justify-between p-3 mb-2 border bg-white rounded"
+                          >
+                            <span>{u.username}</span>
+                            
+                            <span>
+                              
+                              🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} | 🏆{" "}
+                              {u.score ?? 0} | 🌾 {u.totalResources} | 🃏 {u.totalCards}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               /* ======================== ADMIN VIEW ======================== */

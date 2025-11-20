@@ -20,16 +20,19 @@ const userSchema = new mongoose.Schema({
     wheat: { type: Number, default: 0 },
     sheep: { type: Number, default: 0 },
   },
-  Token: {type: Number, defult:0},
+  Token: { type: Number, default: 0 },   // <-- FIXED SPELLING
   house: { type: Number, default: 2 },
   village: { type: Number, default: 0 },
-  roads: {type: Number, default:2},
-}, {
+  roads: { type: Number, default: 2 },
+},
+{
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// 🧮 Virtual field for score
+// =========================
+// 🏆 VIRTUAL SCORE
+// =========================
 userSchema.virtual("score").get(function () {
   const victoryPoints = this.inventory?.victoryPoint || 0;
   return (
@@ -39,13 +42,39 @@ userSchema.virtual("score").get(function () {
   );
 });
 
+// =========================
+// 🃏 VIRTUAL TOTAL CARDS
+// =========================
+userSchema.virtual("totalCards").get(function () {
+  if (!this.inventory) return 0;
+  return Object.values(this.inventory).reduce((a, b) => a + (b || 0), 0);
+});
 
-// ✅ Password check
+// =========================
+// 🌾 VIRTUAL TOTAL RESOURCES
+// =========================
+userSchema.virtual("totalResources").get(function () {
+  if (!this.resources) return 0;
+  return Object.values(this.resources).reduce((a, b) => a + (b || 0), 0);
+});
+
+// =========================
+// 📊 VIRTUAL TOTAL SUM (cards + resources)
+// =========================
+userSchema.virtual("totalSum").get(function () {
+  return this.totalCards + this.totalResources;
+});
+
+// =========================
+// 🔐 Match Password
+// =========================
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// ✅ Hash password before saving
+// =========================
+// 🔐 Hash password
+// =========================
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) next();
   const salt = await bcrypt.genSalt(10);
