@@ -14,10 +14,10 @@ const cardImages = {
 // 🌾 Resource icons
 const resourceImages = {
   wood: "/resources/wood.png",
-  Bricks: "/resources/brick.png",
+  brick: "/resources/brick.png",
   iron: "/resources/iron.png",
   wheat: "/resources/wheat.png",
-  Sheep: "/resources/sheep.png",
+  sheep: "/resources/sheep.png",
 };
 
 const Home = ({ user, setUser, error }) => {
