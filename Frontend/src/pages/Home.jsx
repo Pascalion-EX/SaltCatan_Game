@@ -374,24 +374,32 @@ const fetchUsers = async () => {
                     <div>
                       <h3 className="text-lg font-bold mb-3">Other Teams:</h3>
 
-                      {users
-                        .filter((u) => u.role !== "admin" && u._id !== user._id)
-                        .map((u) => (
-                          
-                          <div
-                            key={u._id}
-                            className="flex justify-between p-3 mb-2 border bg-white rounded"
-                          >
-                            <span>{u.username}</span>
-                            
-                            <span>
-                              
-                              🏠 {u.house ?? 0} | 🏡 {u.village ?? 0} | 🛣️ {u.roads ?? 0} | 🏆{" "}
-                              {u.score ?? 0} |🌾 {sumResources(u.resources)} | 🃏 {sumCards(u.inventory)}
+                          {users
+                            .filter((u) => u.role !== "admin" && u._id !== user._id)
+                            .map((u) => {
+                              const cards = sumCards(u.inventory);
+                              const resources = sumResources(u.resources);
+                              const total = cards + resources + (u.score ?? 0);
 
-                            </span>
-                          </div>
-                        ))}
+                              return (
+                                <div
+                                  key={u._id}
+                                  className="flex justify-between p-3 mb-2 border bg-white rounded"
+                                >
+                                  <span>{u.username}</span>
+
+                                  <span>
+                                    🏠 {u.house ?? 0} |
+                                    🏡 {u.village ?? 0} |
+                                    🛣️ {u.roads ?? 0} |
+                                    🏆 {u.score ?? 0} |
+                                    🌾 {resources} |
+                                    🃏 {cards} |
+                                    📊 {total}
+                                  </span>
+                                </div>
+                              );
+                            })}
                     </div>
                   </div>
                 )}
