@@ -228,8 +228,8 @@ const fetchUsers = async () => {
 
 <div
   className="relative z-10 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl 
-             w-[95%] sm:w-[90%] md:w-[85%] lg:w-[75%] xl:max-w-5xl text-center 
-             border border-gray-200 animate-fadeIn overflow-y-auto max-h-[90vh]"
+           w-[95%] sm:w-[90%] md:w-[85%] lg:w-[75%] xl:max-w-5xl text-center 
+           animate-fadeIn overflow-y-auto max-h-[90vh]"
   style={{ backgroundColor: "rgba(69, 0, 9, 0.6)" }}
 >        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
 
@@ -264,11 +264,11 @@ const fetchUsers = async () => {
 
                 {activeTab === "profile" && (
                   <>
-                    <h2 className="text-3xl font-bold mb-4 text-gray-900">
+                    <h2 className="text-3xl font-bold mb-4 text-white">
                       Welcome, {user.username}
                     </h2>
 
-                    <p className="text-gray-700 mb-6 font-medium">
+                    <p className="text-white mb-6 font-medium">
                       Role: {user.role}
                     </p>
 
