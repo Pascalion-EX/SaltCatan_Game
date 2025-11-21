@@ -416,7 +416,7 @@ const fetchUsers = async () => {
             ) : (
               /* ======================== ADMIN VIEW ======================== */
               <div>
-                <h3 className="text-xl font-bold mb-4">Admin Panel</h3>
+                <h3 className="text-xl font-bold mb-4"> THE BAND OF THE HAWK REMEBERS</h3>
 
                 {users
                   .filter((u) => u.role !== "admin")
