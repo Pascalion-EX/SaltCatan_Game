@@ -71,8 +71,13 @@ const fetchUsers = async () => {
       };
     });
 
-    setUsers(processed);
-  } catch (err) {
+setUsers(processed);
+
+const me = processed.find(u => u._id === user._id);
+if (me) {
+  setUser(me);
+  localStorage.setItem("user", JSON.stringify(me));
+}  } catch (err) {
     console.error("Failed to fetch users:", err.response?.data || err.message);
   }
 };
