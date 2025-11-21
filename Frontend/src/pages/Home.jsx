@@ -582,10 +582,10 @@ const fetchUsers = async () => {
             </h2>
             <p className="text-xl mb-6 text-white">Please log in or register</p>
             <div className="flex flex-col space-y-4">
-              <Link className="bg-blue-600 text-white p-3 rounded" to="/login">
+              <Link className="bg-red-700 hover:bg-red-800 text-white p-3 rounded" to="/login">
                 Login
               </Link>
-              <Link className="bg-gray-200 p-3 rounded" to="/register">
+              <Link className="bg-red-700 hover:bg-red-800 p-3 rounded" to="/register">
                 Register
               </Link>
             </div>
