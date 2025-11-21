@@ -18,43 +18,6 @@ const generateToken = (id) => {
    PUBLIC ROUTES (NO AUTH)
 ---------------------------------------- */
 
-// REGISTER
-router.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
-
-  try {
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "Please fill all the fields" });
-    }
-
-    const usernameExists = await User.findOne({ username });
-    const emailExists = await User.findOne({ email });
-
-    if (usernameExists || emailExists) {
-      return res.status(400).json({ message: "Username or email already exists" });
-    }
-
-    const user = await User.create({ username, email, password });
-
-    const token = generateToken(user._id);
-
-    res.status(201).json({
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      inventory: user.inventory,
-      resources: user.resources,
-      score: 0,
-      token,
-    });
-
-  } catch (err) {
-    console.error("REGISTER ERROR:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 // LOGIN
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
