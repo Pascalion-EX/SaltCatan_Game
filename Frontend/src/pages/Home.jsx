@@ -226,8 +226,12 @@ const fetchUsers = async () => {
       />
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-      <div className="relative z-10 bg-white/80 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl w-[95%] sm:w-[90%] md:w-[85%] lg:w-[75%] xl:max-w-5xl text-center border border-gray-200 animate-fadeIn overflow-y-auto max-h-[90vh]">
-        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
+<div
+  className="relative z-10 backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-2xl 
+             w-[95%] sm:w-[90%] md:w-[85%] lg:w-[75%] xl:max-w-5xl text-center 
+             border border-gray-200 animate-fadeIn overflow-y-auto max-h-[90vh]"
+  style={{ backgroundColor: "rgba(69, 0, 9, 0.6)" }}
+>        {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
 
         {user ? (
           <>
@@ -393,9 +397,7 @@ const fetchUsers = async () => {
                                     🏡 {u.village ?? 0} |
                                     🛣️ {u.roads ?? 0} |
                                     🏆 {u.score ?? 0} |
-                                    🌾 {resources} |
-                                    🃏 {cards} |
-                                    📊 {total}
+
                                   </span>
                                 </div>
                               );
