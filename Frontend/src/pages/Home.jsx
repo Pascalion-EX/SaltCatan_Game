@@ -393,6 +393,9 @@ const fetchUsers = async () => {
                                     🏡 {u.village ?? 0} |
                                     🛣️ {u.roads ?? 0} |
                                     🏆 {u.score ?? 0} |
+                                    🌾 {resources} |
+                                    🃏 {cards} |
+                                    📊 {total}
                                   </span>
                                 </div>
                               );
