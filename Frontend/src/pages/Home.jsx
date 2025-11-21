@@ -352,59 +352,69 @@ const fetchUsers = async () => {
                 )}
 
                 {/* ======================== SUMMARY TAB ======================== */}
-                {activeTab === "summary" && (
-                  <div>
-                    <h3 className="text-2xl font-bold mb-6">Overall Summary</h3>
+{activeTab === "summary" && (
+  <div className="w-full">
+    <h3 className="text-3xl font-bold mb-6 text-white drop-shadow-lg">
+      Overall Summary
+    </h3>
 
-                    <table className="w-full mb-6">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border p-2">🏆 Score</th>
-                          <th className="border p-2">🃏 Cards</th>
-                          <th className="border p-2">🌾 Resources</th>
-                          <th className="border p-2">📊 Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="border p-2">{user.score ?? 0}</td>
-                          <td className="border p-2">{totalCards}</td>
-                          <td className="border p-2">{totalResources}</td>
-                          <td className="border p-2">{totalSum}</td>
-                        </tr>
-                      </tbody>
-                    </table>
+    {/* Summary Table */}
+    <div className="overflow-hidden rounded-xl shadow-lg bg-white/10 backdrop-blur-md border border-white/20 mb-6">
+      <table className="w-full text-white">
+        <thead className="bg-white/10">
+          <tr>
+            <th className="p-3 text-center border-b border-white/20">🏆 Score</th>
+            <th className="p-3 text-center border-b border-white/20">🃏 Cards</th>
+            <th className="p-3 text-center border-b border-white/20">🌾 Resources</th>
+            <th className="p-3 text-center border-b border-white/20">📊 Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="bg-white/5">
+            <td className="p-4 text-center">{user.score ?? 0}</td>
+            <td className="p-4 text-center">{totalCards}</td>
+            <td className="p-4 text-center">{totalResources}</td>
+            <td className="p-4 text-center">{totalSum}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-                    <div>
-                      <h3 className="text-lg font-bold mb-3">Other Teams:</h3>
+    {/* Other Teams Section */}
+    <h3 className="text-xl font-semibold text-white mb-3 drop-shadow">
+      Other Teams:
+    </h3>
 
-                          {users
-                            .filter((u) => u.role !== "admin" && u._id !== user._id)
-                            .map((u) => {
-                              const cards = sumCards(u.inventory);
-                              const resources = sumResources(u.resources);
-                              const total = cards + resources + (u.score ?? 0);
+    <div className="space-y-3">
+      {users
+        .filter((u) => u.role !== "admin" && u._id !== user._id)
+        .map((u) => {
+          const cards = sumCards(u.inventory);
+          const resources = sumResources(u.resources);
+          const total = cards + resources + (u.score ?? 0);
 
-                              return (
-                                <div
-                                  key={u._id}
-                                  className="flex justify-between p-3 mb-2 border bg-white rounded"
-                                >
-                                  <span>{u.username}</span>
+          return (
+            <div
+              key={u._id}
+              className="flex justify-between items-center p-4 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 text-white shadow"
+            >
+              <span className="font-semibold">{u.username}</span>
 
-                                  <span>
-                                    🏠 {u.house ?? 0} |
-                                    🏡 {u.village ?? 0} |
-                                    🛣️ {u.roads ?? 0} |
-                                    🏆 {u.score ?? 0} |
-
-                                  </span>
-                                </div>
-                              );
-                            })}
-                    </div>
-                  </div>
-                )}
+              <span className="flex gap-4 text-sm">
+                🏠 {u.house ?? 0}
+                🏡 {u.village ?? 0}
+                🛣️ {u.roads ?? 0}
+                🏆 {u.score ?? 0}
+                🌾 {resources}
+                🃏 {cards}
+                📊 {total}
+              </span>
+            </div>
+          );
+        })}
+    </div>
+  </div>
+)}
               </>
             ) : (
               /* ======================== ADMIN VIEW ======================== */
