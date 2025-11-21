@@ -309,11 +309,26 @@ router.get("/all", protect, async (req, res) => {
   try {
     const users = await User.find(
       { role: { $ne: "admin" }},
-      "username email house village roads score"
+      "username email inventory resources house village roads Token role"
     );
-    res.status(200).json(users);
+
+    const formatted = users.map((u) => ({
+      ...u._doc,
+      inventory: u.inventory || {},
+      resources: u.resources || {},
+      house: u.house ?? 0,
+      village: u.village ?? 0,
+      roads: u.roads ?? 0,
+      score:
+        (u.house || 0) +
+        (u.village || 0) * 2 +
+        (u.inventory?.victoryPoint || 0),
+    }));
+
+    res.status(200).json(formatted);
+
   } catch (err) {
-    console.error(err);
+    console.error("ALL USERS ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
