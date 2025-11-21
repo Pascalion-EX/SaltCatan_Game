@@ -236,118 +236,117 @@ const fetchUsers = async () => {
         {user ? (
           <>
             {/* ======================== USER VIEW ======================== */}
-            {user.role !== "admin" ? (
-              <>
-                {/* Tabs */}
-                <div className="flex justify-center mb-6 space-x-4">
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className={`px-4 py-2 rounded-lg font-semibold ${
-                      activeTab === "profile"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200"
-                    }`}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("summary")}
-                    className={`px-4 py-2 rounded-lg font-semibold ${
-                      activeTab === "summary"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200"
-                    }`}
-                  >
-                    Summary
-                  </button>
-                </div>
+{user.role !== "admin" ? (
+<>
+  {/* TABS */}
+  <div className="flex justify-center mb-8 space-x-4">
+    <button
+      onClick={() => setActiveTab("profile")}
+      className={`px-5 py-2 rounded-xl font-semibold transition-all shadow
+        ${activeTab === "profile"
+          ? "bg-red-700 text-white"
+          : "bg-white/20 text-white border border-white/30 backdrop-blur-md"
+        }`}
+    >
+      Profile
+    </button>
 
-                {activeTab === "profile" && (
-                  <>
-                    <h2 className="text-3xl font-bold mb-4 text-white">
-                      Welcome, {user.username}
-                    </h2>
+    <button
+      onClick={() => setActiveTab("summary")}
+      className={`px-5 py-2 rounded-xl font-semibold transition-all shadow
+        ${activeTab === "summary"
+          ? "bg-red-700 text-white"
+          : "bg-white/20 text-white border border-white/30 backdrop-blur-md"
+        }`}
+    >
+      Summary
+    </button>
+  </div>
 
-                    <p className="text-white mb-6 font-medium">
-                      Role: {user.role}
-                    </p>
+  {/* ====================== PROFILE TAB ====================== */}
+  {activeTab === "profile" && (
+    <>
+      <h2 className="text-4xl font-bold mb-2 text-white drop-shadow">
+        Welcome, {user.username}
+      </h2>
 
-                    {/* Cards */}
-                    <div className="text-left bg-white/80 p-4 rounded-lg mb-6 shadow-md">
-                      <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                        Your Cards:
-                      </h3>
+      <p className="text-white/80 mb-6 font-medium text-lg">
+        Role: {user.role}
+      </p>
 
-                      {Object.keys(cardImages).map((card) => (
-                        <div
-                          key={card}
-                          className="flex items-center gap-3 bg-white hover:bg-gray-50 rounded-md p-2 mb-2 shadow-sm border"
-                        >
-                          <img
-                            src={cardImages[card]}
-                            className="w-8 h-8 rounded-md border"
-                          />
-                          <span className="capitalize flex-1">
-                            {card.replace(/([A-Z])/g, " $1")}:
-                          </span>
-                          <span className="font-semibold">
-                            {inventory?.[card] ?? 0}
-                          </span>
-                        </div>
-                      ))}
+      {/* CARDS */}
+      <div className="text-left bg-white/10 backdrop-blur-md p-5 rounded-xl mb-6 shadow-lg border border-white/20">
+        <h3 className="text-xl font-semibold mb-3 text-white drop-shadow">
+          Your Cards:
+        </h3>
 
-                      <p className="text-lg font-semibold text-yellow-500 mt-2">
-                        🏆 Score: {user.score}
-                      </p>
-                    </div>
+        {Object.keys(cardImages).map((card) => (
+          <div
+            key={card}
+            className="flex items-center gap-3 bg-white/20 backdrop-blur-sm 
+                       rounded-lg p-3 mb-2 shadow border border-white/20"
+          >
+            <img src={cardImages[card]} className="w-8 h-8 rounded border" />
+            <span className="capitalize flex-1 text-white">
+              {card.replace(/([A-Z])/g, " $1")}:
+            </span>
+            <span className="font-semibold text-white">{inventory?.[card] ?? 0}</span>
+          </div>
+        ))}
 
-                    {/* Resources */}
-                    <div className="text-left bg-white/80 p-4 rounded-lg mb-6 shadow-md">
-                      <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                        Your Resources:
-                      </h3>
+        <p className="text-lg font-semibold text-yellow-400 mt-2">
+          🏆 Score: {user.score}
+        </p>
+      </div>
 
-                      {Object.keys(resourceImages).map((res) => (
-                        <div
-                          key={res}
-                          className="flex items-center gap-3 bg-white hover:bg-gray-50 rounded-md p-2 mb-2 shadow-sm border"
-                        >
-                          <img
-                            src={resourceImages[res]}
-                            className="w-8 h-8 rounded-md border"
-                          />
-                          <span className="capitalize flex-1">{res}</span>
-                          <span className="font-semibold">
-                            {user?.resources?.[res] ?? 0}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+      {/* RESOURCES */}
+      <div className="text-left bg-white/10 backdrop-blur-md p-5 rounded-xl mb-6 shadow-lg border border-white/20">
+        <h3 className="text-xl font-semibold mb-3 text-white">
+          Your Resources:
+        </h3>
 
-                    {/* Buildings */}
-                    <div className="text-left bg-white/80 p-4 rounded-lg mb-4 shadow-md">
-                      <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                        Buildings:
-                      </h3>
+        {Object.keys(resourceImages).map((res) => (
+          <div
+            key={res}
+            className="flex items-center gap-3 bg-white/20 backdrop-blur-sm 
+                       rounded-lg p-3 mb-2 shadow border border-white/20"
+          >
+            <img src={resourceImages[res]} className="w-8 h-8 rounded border" />
+            <span className="capitalize flex-1 text-white">{res}</span>
+            <span className="font-semibold text-white">{user?.resources?.[res] ?? 0}</span>
+          </div>
+        ))}
+      </div>
 
-                      <p>🏠 Houses: {user.house ?? 0}</p>
-                      <p>🏡 Villages: {user.village ?? 0}</p>
-                      <p>🛣️ Roads: {user.roads ?? 0}</p>
-                    </div>
+      {/* BUILDINGS */}
+      <div className="text-left bg-white/10 backdrop-blur-md p-5 rounded-xl mb-6 shadow-lg border border-white/20">
+        <h3 className="text-xl font-semibold mb-3 text-white">
+          Buildings:
+        </h3>
 
-                    {/* Tokens */}
-                    <div className="bg-white/80 p-4 rounded-lg shadow-md">
-                      <p className="font-semibold mb-2">
-                        🎟️ Tokens: {user.Token ?? 0}
-                      </p>
+        <p className="text-white">🏠 Houses: {user.house ?? 0}</p>
+        <p className="text-white">🏡 Villages: {user.village ?? 0}</p>
+        <p className="text-white">🛣️ Roads: {user.roads ?? 0}</p>
+      </div>
 
-                      <button
-                        onClick={handleMysteryCard}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-xl"
-                      >
-                        🎴 Mystery Card
-                      </button>
-                    </div>
+      {/* TOKENS */}
+      <div className="bg-white/10 backdrop-blur-md p-5 rounded-xl shadow-lg border border-white/20">
+        <p className="font-semibold mb-3 text-white">
+          🎟️ Tokens: {user.Token ?? 0}
+        </p>
+
+        <button
+          onClick={handleMysteryCard}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl shadow-lg transition"
+        >
+          🎴 Mystery Card
+        </button>
+      </div>
+    </>
+  )}
+</>
+) : null}
+
                   </>
                 )}
 
