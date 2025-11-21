@@ -51,19 +51,31 @@ const Home = ({ user, setUser, error }) => {
   /* ============================================================
       🔁 Fetch Users (Admin + Normal Users)
   ============================================================ */
-  const fetchUsers = async () => {
-    try {
-      const endpoint =
-        user?.role === "admin"
-          ? `${API_BASE}/api/users/admin/users`
-          : `${API_BASE}/api/users/all`;
+const fetchUsers = async () => {
+  try {
+    const endpoint =
+      user?.role === "admin"
+        ? `${API_BASE}/api/users/admin/users`
+        : `${API_BASE}/api/users/all`;
 
-      const res = await axios.get(endpoint);
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Failed to fetch users:", err.response?.data || err.message);
-    }
-  };
+    const res = await axios.get(endpoint);
+
+    const processed = res.data.map(u => {
+      const totalCards = Object.values(u.inventory || {}).reduce((a, b) => a + (b || 0), 0);
+      const totalResources = Object.values(u.resources || {}).reduce((a, b) => a + (b || 0), 0);
+
+      return {
+        ...u,
+        totalCards,
+        totalResources,
+      };
+    });
+
+    setUsers(processed);
+  } catch (err) {
+    console.error("Failed to fetch users:", err.response?.data || err.message);
+  }
+};
 
   /* ============================================================
       🔁 When user loads or changes → fetch users + sync profile
